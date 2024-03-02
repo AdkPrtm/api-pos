@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  name         String        @db.VarChar(50)
+  number_phone String        @db.VarChar(20)
+  username     String        @db.VarChar(100)
+  email        String        @unique @db.VarChar(100)
+  password     String
+  avatar       String?       @default("/images/profile.png") @db.VarChar(50)
+  role         Role          @default(ADMIN)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  Transaction  Transaction[]
+
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  OWNER
+  CASHIER
+}
+
+model Product {
+  id          Int           @id @default(autoincrement())
+  title       String        @db.VarChar(50)
+  description String?       @db.VarChar(100)
+  categoryId  Category      @relation(fields: [category_id], references: [id])
+  category_id Int
+  picture     String
+  price       Float
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  transaction Transaction[]
+
+  @@map("products")
+}
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  title       String    @db.VarChar(50)
+  description String?   @db.VarChar(100)
+  Product     Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("categories")
+}
+
+model Payment {
+  id          Int           @id @default(autoincrement())
+  name        String        @db.VarChar(50)
+  code        String        @unique @db.VarChar(10)
+  picture     String        @db.VarChar(100)
+  status      StatusPayment
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  transaction Transaction[]
+
+  @@map("payment_method")
+}
+
+enum StatusPayment {
+  Active
+  Inactive
+}
+
+model Transaction {
+  id               Int               @id @default(autoincrement())
+  userId           User              @relation(fields: [user_id], references: [id])
+  user_id          Int
+  paymentMethod    Payment           @relation(fields: [payment_id], references: [id])
+  payment_id       Int
+  productId        Product           @relation(fields: [product_id], references: [id])
+  product_id       Int
+  price            Float
+  transaction_code String            @unique @db.VarChar(50)
+  status           StatusTransaction
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  @@map("transactions")
+}
+
+enum StatusTransaction {
+  Pending
+  Success
+}
